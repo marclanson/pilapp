@@ -1,0 +1,5 @@
+{
+  "name": "TicketTrack Pilates",
+  "description": "A simple, efficient, and intuitive CRM for a personal fitness instructor to manage clients and their purchased ticket packs. The app streamlines the process of tracking attendance, ticket usage, and pack expiry.",
+  "requestFramePermissions": []
+}
