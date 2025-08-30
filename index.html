@@ -27,9 +27,8 @@
     <div id="root"></div>
     <!-- 
       This inline script is now the application's entry point.
-      Babel transpiles this block first, and then follows the 'import'
-      statements to transpile the rest of the application.
-      This is the most reliable method for a no-build-step setup.
+      Babel transpiles this block directly, which then correctly loads and
+      transpiles all other imported modules like App.js.
     -->
     <script type="text/babel" data-type="module">
       import React from 'https://esm.sh/react@^19.1.1';
