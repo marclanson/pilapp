@@ -35,24 +35,25 @@ const App: React.FC = () => {
   ], []);
 
   return (
-    <div className="min-h-screen bg-secondary font-sans">
-      <header className="bg-primary text-white shadow-md">
+    <div className="min-h-screen bg-secondary font-sans text-primary-dark">
+      <header className="bg-white/80 backdrop-blur-lg sticky top-0 z-40 border-b border-slate-200">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between h-auto sm:h-20 py-4 sm:py-0">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 sm:mb-0">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary-dark mb-4 sm:mb-0">
               TicketTrack Pilates
             </h1>
             <nav>
-              <ul className="flex flex-wrap justify-center space-x-2 sm:space-x-4">
+              <ul className="flex flex-wrap justify-center items-center space-x-1 sm:space-x-2">
                 {navItems.map(item => (
                   <li key={item.page}>
                     <button
                       onClick={() => setCurrentPage(item.page)}
-                      className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                      className={`flex items-center px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-200 ${
                         currentPage === item.page
-                          ? 'bg-primary-dark'
-                          : 'hover:bg-primary-dark/50'
+                          ? 'bg-accent/10 text-accent'
+                          : 'text-slate-600 hover:bg-slate-200/60 hover:text-primary-dark'
                       }`}
+                      aria-current={currentPage === item.page ? 'page' : undefined}
                     >
                       <item.icon className="mr-2 h-5 w-5" />
                       {item.label}

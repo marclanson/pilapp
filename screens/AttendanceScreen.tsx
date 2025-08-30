@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { AppData } from '../hooks/useAppData';
 import { TicketType, ClientStatus, AttendanceRecord, Client } from '../types';
@@ -78,30 +79,30 @@ const AttendanceScreen: React.FC<{ data: AppData }> = ({ data }) => {
     }, [attendanceRecords, clients]);
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-1">
-                <div className="bg-white p-6 rounded-lg shadow-md sticky top-8">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Record Attendance</h2>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80 sticky top-28">
+                    <h2 className="text-2xl font-bold text-primary-dark mb-6">Record Attendance</h2>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Class Date</label>
-                            <input type="date" value={classDate} onChange={e => setClassDate(e.target.value)} required className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary"/>
+                            <label className="block text-sm font-medium text-slate-700">Class Date</label>
+                            <input type="date" value={classDate} onChange={e => setClassDate(e.target.value)} required className="mt-1 block w-full border-slate-300 rounded-md shadow-sm focus:ring-accent focus:border-accent"/>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Class Type</label>
-                            <select value={classType} onChange={e => { setClassType(e.target.value as TicketType); setSelectedClients(new Set()); }} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary">
+                            <label className="block text-sm font-medium text-slate-700">Class Type</label>
+                            <select value={classType} onChange={e => { setClassType(e.target.value as TicketType); setSelectedClients(new Set()); }} className="mt-1 block w-full border-slate-300 rounded-md shadow-sm focus:ring-accent focus:border-accent">
                                 <option value={TicketType.GROUP}>Group</option>
                                 <option value={TicketType.PRIVATE}>Private</option>
                             </select>
                         </div>
                         <div>
-                            <label htmlFor="attendee-search" className="block text-sm font-medium text-gray-700">Attendees</label>
+                            <label htmlFor="attendee-search" className="block text-sm font-medium text-slate-700">Attendees</label>
                             <div className="mt-1 relative">
-                                <div className="w-full p-2 border border-gray-300 rounded-md flex flex-wrap gap-2 min-h-[42px] items-center">
+                                <div className="w-full p-2 border border-slate-300 rounded-md flex flex-wrap gap-2 min-h-[42px] items-center focus-within:ring-2 focus-within:ring-accent focus-within:border-accent">
                                     {selectedClientObjects.map(client => (
-                                        <span key={client.id} className="bg-primary text-white flex items-center gap-2 px-2 py-1 text-sm rounded-full">
+                                        <span key={client.id} className="bg-primary-dark text-white flex items-center gap-2 px-2.5 py-1 text-sm rounded-full">
                                             {client.firstName} {client.lastName}
-                                            <button type="button" onClick={() => removeSelectedClient(client.id)} className="rounded-full hover:bg-primary-dark transition-colors">
+                                            <button type="button" onClick={() => removeSelectedClient(client.id)} className="rounded-full hover:bg-primary transition-colors">
                                                 <X size={14} />
                                             </button>
                                         </span>
@@ -116,12 +117,12 @@ const AttendanceScreen: React.FC<{ data: AppData }> = ({ data }) => {
                                     />
                                 </div>
                                 {searchTerm.trim() && (
-                                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+                                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl">
                                         <ul className="max-h-60 overflow-y-auto">
                                             {searchResults.length > 0 ? searchResults.map(client => (
                                                 <li 
                                                     key={client.id} 
-                                                    className="p-3 hover:bg-gray-100 cursor-pointer text-sm"
+                                                    className="p-2 px-3 hover:bg-slate-100 cursor-pointer text-sm"
                                                     onMouseDown={(e) => { // use onMouseDown to prevent input blur before click registers
                                                         e.preventDefault();
                                                         addSelectedClient(client.id);
@@ -130,40 +131,40 @@ const AttendanceScreen: React.FC<{ data: AppData }> = ({ data }) => {
                                                     {client.firstName} {client.lastName}
                                                 </li>
                                             )) : (
-                                                <li className="p-3 text-sm text-gray-500">No matching eligible clients found.</li>
+                                                <li className="p-2 px-3 text-sm text-slate-500">No matching eligible clients found.</li>
                                             )}
                                         </ul>
                                     </div>
                                 )}
                             </div>
                         </div>
-                         <button type="submit" className="w-full mt-6 px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark">
+                         <button type="submit" className="w-full mt-6 px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark font-semibold">
                            Record Attendance ({selectedClients.size})
                         </button>
                     </form>
                 </div>
             </div>
 
-            <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Attendance History</h2>
+            <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200/80">
+                <h2 className="text-2xl font-bold text-primary-dark mb-6">Attendance History</h2>
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                    <table className="min-w-full">
+                        <thead className="bg-slate-50">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class Type</th>
-                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</th>
+                                <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Client</th>
+                                <th className="p-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Class Type</th>
+                                <th className="p-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                         <tbody className="bg-white divide-y divide-gray-200">
+                         <tbody className="bg-white">
                             {recordsWithClientInfo.map(record => (
-                                <tr key={record.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{new Date(record.classDate).toLocaleDateString()}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{record.client?.firstName} {record.client?.lastName}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{record.classType}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                        <button onClick={() => handleDelete(record.id)} className="text-red-600 hover:text-red-900">
+                                <tr key={record.id} className="border-b border-slate-200">
+                                    <td className="p-4 whitespace-nowrap text-sm text-slate-800">{new Date(record.classDate).toLocaleDateString()}</td>
+                                    <td className="p-4 whitespace-nowrap text-sm text-slate-800 font-medium">{record.client?.firstName} {record.client?.lastName}</td>
+                                    <td className="p-4 whitespace-nowrap text-sm text-slate-500 capitalize">{record.classType}</td>
+                                    <td className="p-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button onClick={() => handleDelete(record.id)} className="text-slate-400 hover:text-red-500 p-1">
                                             <Trash2 className="h-5 w-5"/>
                                         </button>
                                     </td>
@@ -172,7 +173,7 @@ const AttendanceScreen: React.FC<{ data: AppData }> = ({ data }) => {
                         </tbody>
                     </table>
                 </div>
-                 {recordsWithClientInfo.length === 0 && <p className="text-center text-gray-500 py-8">No attendance records found.</p>}
+                 {recordsWithClientInfo.length === 0 && <p className="text-center text-slate-500 py-8">No attendance records found.</p>}
             </div>
         </div>
     );
