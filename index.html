@@ -20,12 +20,33 @@
         },
       }
     </script>
-<!-- Add Babel Standalone for in-browser JSX transformation -->
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-</head>
+    <!-- Add Babel Standalone for in-browser JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  </head>
   <body class="bg-secondary">
     <div id="root"></div>
-    <!-- Babel will transpile this script and its local module dependencies -->
-    <script type="text/babel" data-type="module" src="./index.js"></script>
+    <!-- 
+      This inline script is now the application's entry point.
+      Babel transpiles this block first, and then follows the 'import'
+      statements to transpile the rest of the application.
+      This is the most reliable method for a no-build-step setup.
+    -->
+    <script type="text/babel" data-type="module">
+      import React from 'https://esm.sh/react@^19.1.1';
+      import { createRoot } from 'https://esm.sh/react-dom@^19.1.1/client';
+      import App from './App.js';
+
+      const rootElement = document.getElementById('root');
+      if (!rootElement) {
+        throw new Error("Could not find root element to mount to");
+      }
+
+      const root = createRoot(rootElement);
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>
+      );
+    </script>
   </body>
 </html>
