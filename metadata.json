@@ -1,5 +1,5 @@
 {
   "name": "TicketTrack Pilates",
-  "description": "A simple, efficient, and intuitive CRM for a personal fitness instructor to manage clients and their purchased ticket packs. The app streamlines the process of tracking attendance, ticket usage, and pack expiry.",
+  "description": "A real-time, multi-device CRM for fitness instructors to manage clients and ticket packs. All data is stored securely in the cloud, available on any device.",
   "requestFramePermissions": []
 }

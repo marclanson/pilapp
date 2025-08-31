@@ -25,177 +25,150 @@
   </head>
   <body class="bg-secondary">
     <div id="root"></div>
-    <!-- 
-      All application code is now consolidated into this single script block.
-      This is a robust, self-contained approach that eliminates all module
-      loading errors and race conditions.
-    -->
     <script type="text/babel" data-type="module">
       import React, { useState, useMemo, useEffect, useCallback } from 'https://esm.sh/react@^19.1.1';
       import { createRoot } from 'https://esm.sh/react-dom@^19.1.1/client';
       import { 
         Calendar, Users, ClipboardList, LayoutDashboard, 
         DollarSign, Ticket, Clock, AlertTriangle,
-        PlusCircle, Edit, History,
-        Trash2, X
+        PlusCircle, Edit, History, LogOut,
+        Trash2, X, LoaderCircle
       } from 'https://esm.sh/lucide-react@^0.539.0';
+      
+      // --- Firebase SDKs ---
+      import { initializeApp } from 'https://esm.sh/firebase@10.12.3/app';
+      import { 
+        getAuth, 
+        onAuthStateChanged,
+        GoogleAuthProvider,
+        signInWithPopup,
+        createUserWithEmailAndPassword,
+        signInWithEmailAndPassword,
+        signOut
+      } from 'https://esm.sh/firebase@10.12.3/auth';
+      import { 
+        getFirestore, 
+        collection, 
+        onSnapshot, 
+        addDoc, 
+        updateDoc, 
+        doc, 
+        deleteDoc,
+        Timestamp,
+        query,
+        where
+      } from 'https://esm.sh/firebase@10.12.3/firestore';
 
-      // --- From types.js ---
-      const ClientStatus = Object.freeze({
-        ACTIVE: 'active',
-        INACTIVE: 'inactive',
-      });
 
-      const TicketType = Object.freeze({
-        PRIVATE: 'private',
-        GROUP: 'group',
-      });
-
-      const PackTemplateStatus = Object.freeze({
-        ACTIVE: 'active',
-        INACTIVE: 'inactive',
-      });
-
-      const PackHistoryType = Object.freeze({
-        PURCHASE: 'purchase',
-        ATTENDANCE: 'attendance',
-        EXPIRY_CHANGE: 'expiry_change',
-      });
-
-      const Page = Object.freeze({
-          DASHBOARD: 'dashboard',
-          CLIENTS: 'clients',
-          TEMPLATES: 'templates',
-          ATTENDANCE: 'attendance',
-      });
-
-      // --- From hooks/useAppData.js ---
-      const APP_DATA_KEY = 'ticketTrackPilatesData';
-
-      const getInitialData = () => {
-          try {
-              const storedData = localStorage.getItem(APP_DATA_KEY);
-              if (storedData) {
-                  return JSON.parse(storedData);
-              }
-          } catch (error) {
-              console.error("Failed to parse data from localStorage", error);
-          }
-          
-          const client1Id = crypto.randomUUID();
-          const client2Id = crypto.randomUUID();
-          const template1Id = crypto.randomUUID();
-          const template2Id = crypto.randomUUID();
-
-          const today = new Date();
-          const purchaseDate1 = new Date(today);
-          purchaseDate1.setDate(today.getDate() - 40);
-
-          const purchaseDate2 = new Date(today);
-          purchaseDate2.setDate(today.getDate() - 15);
-
-          const attendanceDate1 = new Date(today);
-          attendanceDate1.setDate(today.getDate() - 20);
-
-          const attendanceDate2 = new Date(today);
-          attendanceDate2.setDate(today.getDate() - 10);
-
-          const expiryDate1 = new Date(purchaseDate1);
-          expiryDate1.setMonth(expiryDate1.getMonth() + 6);
-          
-          const expiryDate2 = new Date(purchaseDate2);
-          expiryDate2.setMonth(expiryDate2.getMonth() + 3);
-
-          const purchasedPack1Id = crypto.randomUUID();
-
-          return {
-              clients: [
-                  { id: client1Id, firstName: 'Jane', lastName: 'Doe', email: 'jane.doe@example.com', phone: '123-456-7890', status: ClientStatus.ACTIVE },
-                  { id: client2Id, firstName: 'John', lastName: 'Smith', email: 'john.smith@example.com', phone: '098-765-4321', status: ClientStatus.ACTIVE },
-                  { id: crypto.randomUUID(), firstName: 'Emily', lastName: 'Jones', email: 'emily.jones@example.com', phone: '555-555-5555', status: ClientStatus.INACTIVE },
-              ],
-              packTemplates: [
-                  { id: template1Id, name: '10 Group Classes', ticketCount: 10, ticketType: TicketType.GROUP, price: 200, expiryMonths: 6, status: PackTemplateStatus.ACTIVE },
-                  { id: template2Id, name: '5 Private Sessions', ticketCount: 5, ticketType: TicketType.PRIVATE, price: 450, expiryMonths: 3, status: PackTemplateStatus.ACTIVE },
-                  { id: crypto.randomUUID(), name: '20 Group Classes (Old)', ticketCount: 20, ticketType: TicketType.GROUP, price: 350, expiryMonths: 12, status: PackTemplateStatus.INACTIVE },
-              ],
-              purchasedPacks: [
-                  {
-                      id: purchasedPack1Id,
-                      clientId: client1Id,
-                      templateId: template1Id,
-                      purchaseDate: purchaseDate1.toISOString(),
-                      expiryDate: expiryDate1.toISOString(),
-                      initialTickets: 10,
-                      ticketsRemaining: 8,
-                      purchasePrice: 200,
-                      history: [
-                          { id: crypto.randomUUID(), date: purchaseDate1.toISOString(), type: PackHistoryType.PURCHASE, details: 'Purchased pack for $200.00' },
-                          { id: crypto.randomUUID(), date: attendanceDate1.toISOString(), type: PackHistoryType.ATTENDANCE, details: 'Attended group class' },
-                          { id: crypto.randomUUID(), date: attendanceDate2.toISOString(), type: PackHistoryType.ATTENDANCE, details: 'Attended group class' },
-                      ]
-                  },
-                  {
-                      id: crypto.randomUUID(),
-                      clientId: client2Id,
-                      templateId: template2Id,
-                      purchaseDate: purchaseDate2.toISOString(),
-                      expiryDate: expiryDate2.toISOString(),
-                      initialTickets: 5,
-                      ticketsRemaining: 5,
-                      purchasePrice: 450,
-                      history: [
-                          { id: crypto.randomUUID(), date: purchaseDate2.toISOString(), type: PackHistoryType.PURCHASE, details: 'Purchased pack for $450.00' },
-                      ]
-                  }
-              ],
-              attendanceRecords: [
-                  { id: crypto.randomUUID(), classDate: attendanceDate1.toISOString(), classType: TicketType.GROUP, clientId: client1Id, purchasedPackId: purchasedPack1Id },
-                  { id: crypto.randomUUID(), classDate: attendanceDate2.toISOString(), classType: TicketType.GROUP, clientId: client1Id, purchasedPackId: purchasedPack1Id },
-              ],
-          };
+      // --- PASTE YOUR FIREBASE CONFIGURATION OBJECT HERE ---
+      // This is the object you copied from the Firebase console.
+      const firebaseConfig = {
+        apiKey: "AIzaSyD556mSEm-Q7IAIykHGXjhWc-kpgcmMpF0",
+        authDomain: "ticket-tora.firebaseapp.com",
+        projectId: "ticket-tora",
+        storageBucket: "ticket-tora.firebasestorage.app",
+        messagingSenderId: "194518083030",
+        appId: "1:194518083030:web:b4b21f2786275e76deb077"
       };
+      
+      // --- Initialize Firebase ---
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
 
-      const useAppData = () => {
+      // --- Enums and Constants (from types.js) ---
+      const ClientStatus = Object.freeze({ ACTIVE: 'active', INACTIVE: 'inactive' });
+      const TicketType = Object.freeze({ PRIVATE: 'private', GROUP: 'group' });
+      const PackTemplateStatus = Object.freeze({ ACTIVE: 'active', INACTIVE: 'inactive' });
+      const PackHistoryType = Object.freeze({ PURCHASE: 'purchase', ATTENDANCE: 'attendance', EXPIRY_CHANGE: 'expiry_change' });
+      const Page = Object.freeze({ DASHBOARD: 'dashboard', CLIENTS: 'clients', TEMPLATES: 'templates', ATTENDANCE: 'attendance' });
+
+      // --- Data Hook (Re-written for Firebase) ---
+      const useFirestoreData = (userId) => {
           const [clients, setClients] = useState([]);
           const [packTemplates, setPackTemplates] = useState([]);
           const [purchasedPacks, setPurchasedPacks] = useState([]);
           const [attendanceRecords, setAttendanceRecords] = useState([]);
-          
-          useEffect(() => {
-              const data = getInitialData();
-              setClients(data.clients);
-              setPackTemplates(data.packTemplates);
-              setPurchasedPacks(data.purchasedPacks);
-              setAttendanceRecords(data.attendanceRecords);
-          }, []);
+          const [loading, setLoading] = useState(true);
 
           useEffect(() => {
-              try {
-                  const appData = JSON.stringify({ clients, packTemplates, purchasedPacks, attendanceRecords });
-                  localStorage.setItem(APP_DATA_KEY, appData);
-              } catch (error) {
-                  console.error("Failed to save data to localStorage", error);
-              }
-          }, [clients, packTemplates, purchasedPacks, attendanceRecords]);
-          
-          const addClient = (client) => setClients(prev => [...prev, { ...client, id: crypto.randomUUID() }]);
-          const updateClient = (updatedClient) => setClients(prev => prev.map(c => c.id === updatedClient.id ? updatedClient : c));
+              if (!userId) {
+                  setLoading(false);
+                  return;
+              };
 
-          const addPackTemplate = (template) => setPackTemplates(prev => [...prev, { ...template, id: crypto.randomUUID() }]);
-          const updatePackTemplate = (updatedTemplate) => {
+              const collections = {
+                  clients: collection(db, 'users', userId, 'clients'),
+                  packTemplates: collection(db, 'users', userId, 'packTemplates'),
+                  purchasedPacks: collection(db, 'users', userId, 'purchasedPacks'),
+                  attendanceRecords: collection(db, 'users', userId, 'attendanceRecords'),
+              };
+
+              const unsubscribes = [
+                  onSnapshot(collections.clients, snapshot => {
+                      setClients(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                  }),
+                  onSnapshot(collections.packTemplates, snapshot => {
+                      setPackTemplates(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+                  }),
+                  onSnapshot(collections.purchasedPacks, snapshot => {
+                      setPurchasedPacks(snapshot.docs.map(doc => {
+                          const data = doc.data();
+                          // Convert Firestore Timestamps back to JS Dates
+                          return {
+                              id: doc.id,
+                              ...data,
+                              purchaseDate: data.purchaseDate?.toDate().toISOString(),
+                              expiryDate: data.expiryDate?.toDate().toISOString(),
+                              history: data.history.map(h => ({...h, date: h.date?.toDate().toISOString()}))
+                          };
+                      }));
+                  }),
+                  onSnapshot(collections.attendanceRecords, snapshot => {
+                      setAttendanceRecords(snapshot.docs.map(doc => {
+                           const data = doc.data();
+                           return { id: doc.id, ...data, classDate: data.classDate?.toDate().toISOString() };
+                      }));
+                  }),
+              ];
+              
+              setLoading(false); // Consider more granular loading later
+
+              // Cleanup listeners on unmount
+              return () => unsubscribes.forEach(unsub => unsub());
+          }, [userId]);
+
+          // --- Data Modification Functions (now write to Firestore) ---
+
+          const addClient = (client) => addDoc(collection(db, 'users', userId, 'clients'), client);
+          const updateClient = (updatedClient) => {
+              const { id, ...data } = updatedClient;
+              updateDoc(doc(db, 'users', userId, 'clients', id), data);
+          };
+
+          const addPackTemplate = (template) => addDoc(collection(db, 'users', userId, 'packTemplates'), template);
+          
+          const updatePackTemplate = async (updatedTemplate) => {
               if (updatedTemplate.status === PackTemplateStatus.INACTIVE) {
+                  const activePacksQuery = query(
+                    collection(db, 'users', userId, 'purchasedPacks'),
+                    where('templateId', '==', updatedTemplate.id)
+                  );
+                  // This is a simplified check. A full check would also verify ticket counts and expiry dates.
+                  // For a client-side app, this alert is a reasonable guardrail.
                   const hasActivePacks = purchasedPacks.some(p => 
                       p.templateId === updatedTemplate.id &&
                       p.ticketsRemaining > 0 &&
                       new Date(p.expiryDate) > new Date()
                   );
+
                   if (hasActivePacks) {
                       alert('Cannot make template inactive as there are active client packs using it.');
                       return;
                   }
               }
-              setPackTemplates(prev => prev.map(t => t.id === updatedTemplate.id ? updatedTemplate : t));
+              const { id, ...data } = updatedTemplate;
+              updateDoc(doc(db, 'users', userId, 'packTemplates', id), data);
           };
           
           const recordPurchase = (clientId, templateId, purchaseDate) => {
@@ -206,47 +179,41 @@
               expiryDate.setMonth(expiryDate.getMonth() + template.expiryMonths);
 
               const newPack = {
-                  id: crypto.randomUUID(),
                   clientId,
                   templateId,
-                  purchaseDate: purchaseDate.toISOString(),
-                  expiryDate: expiryDate.toISOString(),
+                  purchaseDate: Timestamp.fromDate(purchaseDate),
+                  expiryDate: Timestamp.fromDate(expiryDate),
                   initialTickets: template.ticketCount,
                   ticketsRemaining: template.ticketCount,
                   purchasePrice: template.price,
                   history: [
-                      { id: crypto.randomUUID(), date: purchaseDate.toISOString(), type: PackHistoryType.PURCHASE, details: `Purchased pack for $${template.price.toFixed(2)}` }
+                      { date: Timestamp.fromDate(purchaseDate), type: PackHistoryType.PURCHASE, details: `Purchased pack for $${template.price.toFixed(2)}` }
                   ]
               };
-              setPurchasedPacks(prev => [...prev, newPack]);
+              addDoc(collection(db, 'users', userId, 'purchasedPacks'), newPack);
           };
 
           const updatePurchasedPackExpiry = (packId, newExpiryDate) => {
-              setPurchasedPacks(prev => prev.map(pack => {
-                  if (pack.id === packId) {
-                      const oldExpiryDate = new Date(pack.expiryDate).toLocaleDateString();
-                      const updatedHistory = {
-                          id: crypto.randomUUID(),
-                          date: new Date().toISOString(),
-                          type: PackHistoryType.EXPIRY_CHANGE,
-                          details: `Expiry date changed from ${oldExpiryDate} to ${newExpiryDate.toLocaleDateString()}`
-                      };
-                      return {
-                          ...pack,
-                          expiryDate: newExpiryDate.toISOString(),
-                          history: [...pack.history, updatedHistory]
-                      };
-                  }
-                  return pack;
-              }));
+              const packRef = doc(db, 'users', userId, 'purchasedPacks', packId);
+              const pack = purchasedPacks.find(p => p.id === packId);
+              if(!pack) return;
+
+              const oldExpiryDate = new Date(pack.expiryDate).toLocaleDateString();
+              const updatedHistory = {
+                  date: Timestamp.now(),
+                  type: PackHistoryType.EXPIRY_CHANGE,
+                  details: `Expiry date changed from ${oldExpiryDate} to ${newExpiryDate.toLocaleDateString()}`
+              };
+
+              updateDoc(packRef, {
+                  expiryDate: Timestamp.fromDate(newExpiryDate),
+                  history: [...pack.history.map(h => ({...h, date: Timestamp.fromDate(new Date(h.date))})), updatedHistory]
+              });
           };
 
           const recordAttendance = useCallback((classDate, classType, clientIds) => {
-              const updatedPacks = [...purchasedPacks];
-              const newAttendanceRecords = [];
-
               clientIds.forEach(clientId => {
-                  const clientPacks = updatedPacks
+                  const clientPacks = purchasedPacks
                       .filter(p => {
                           const template = packTemplates.find(t => t.id === p.templateId);
                           return p.clientId === clientId &&
@@ -254,72 +221,63 @@
                                 p.ticketsRemaining > 0 &&
                                 new Date(p.expiryDate) >= classDate;
                       })
-                      .sort((a, b) => {
-                          const expiryA = new Date(a.expiryDate).getTime();
-                          const expiryB = new Date(b.expiryDate).getTime();
-                          if (expiryA !== expiryB) return expiryA - expiryB;
-                          return new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime();
-                      });
+                      .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
 
                   if (clientPacks.length > 0) {
                       const packToDeduct = clientPacks[0];
-                      packToDeduct.ticketsRemaining -= 1;
-                      packToDeduct.history.push({
-                          id: crypto.randomUUID(),
-                          date: classDate.toISOString(),
-                          type: PackHistoryType.ATTENDANCE,
-                          details: `Attended ${classType} class`
+                      const packRef = doc(db, 'users', userId, 'purchasedPacks', packToDeduct.id);
+                      
+                      updateDoc(packRef, {
+                          ticketsRemaining: packToDeduct.ticketsRemaining - 1,
+                          history: [
+                              ...packToDeduct.history.map(h => ({...h, date: Timestamp.fromDate(new Date(h.date))})),
+                              {
+                                date: Timestamp.fromDate(classDate),
+                                type: PackHistoryType.ATTENDANCE,
+                                details: `Attended ${classType} class`
+                              }
+                          ]
                       });
                       
-                      newAttendanceRecords.push({
-                          id: crypto.randomUUID(),
-                          classDate: classDate.toISOString(),
+                      addDoc(collection(db, 'users', userId, 'attendanceRecords'), {
+                          classDate: Timestamp.fromDate(classDate),
                           classType,
                           clientId,
                           purchasedPackId: packToDeduct.id
                       });
                   }
               });
+          }, [purchasedPacks, packTemplates, userId]);
 
-              setPurchasedPacks(updatedPacks);
-              setAttendanceRecords(prev => [...prev, ...newAttendanceRecords]);
-          }, [purchasedPacks, packTemplates]);
-
-          const deleteAttendance = useCallback((recordId) => {
+          const deleteAttendance = useCallback(async (recordId) => {
               const recordToDelete = attendanceRecords.find(r => r.id === recordId);
               if (!recordToDelete) return;
 
-              setPurchasedPacks(prev => prev.map(pack => {
-                  if (pack.id === recordToDelete.purchasedPackId) {
-                      return {
-                          ...pack,
-                          ticketsRemaining: pack.ticketsRemaining + 1,
-                          history: pack.history.filter(h => h.type !== PackHistoryType.ATTENDANCE || new Date(h.date).getTime() !== new Date(recordToDelete.classDate).getTime())
-                      };
-                  }
-                  return pack;
-              }));
+              const packRef = doc(db, 'users', userId, 'purchasedPacks', recordToDelete.purchasedPackId);
+              const pack = purchasedPacks.find(p => p.id === recordToDelete.purchasedPackId);
 
-              setAttendanceRecords(prev => prev.filter(r => r.id !== recordId));
-          }, [attendanceRecords]);
+              if (pack) {
+                  await updateDoc(packRef, {
+                      ticketsRemaining: pack.ticketsRemaining + 1,
+                      history: pack.history
+                        .map(h => ({...h, date: Timestamp.fromDate(new Date(h.date))}))
+                        .filter(h => h.type !== PackHistoryType.ATTENDANCE || h.date.toMillis() !== new Date(recordToDelete.classDate).getTime())
+                  });
+              }
+
+              await deleteDoc(doc(db, 'users', userId, 'attendanceRecords', recordId));
+          }, [attendanceRecords, purchasedPacks, userId]);
           
           return {
-              clients,
-              addClient,
-              updateClient,
-              packTemplates,
-              addPackTemplate,
-              updatePackTemplate,
-              purchasedPacks,
-              recordPurchase,
-              updatePurchasedPackExpiry,
-              attendanceRecords,
-              recordAttendance,
-              deleteAttendance
+              loading,
+              clients, addClient, updateClient,
+              packTemplates, addPackTemplate, updatePackTemplate,
+              purchasedPacks, recordPurchase, updatePurchasedPackExpiry,
+              attendanceRecords, recordAttendance, deleteAttendance
           };
       };
 
-      // --- From screens/DashboardScreen.js ---
+      // --- Screens (largely unchanged, but now get data from Firestore hook) ---
       const StatCard = ({ icon, title, value, iconBg, iconColor }) => (
           <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200/80 flex items-center">
               <div className={`rounded-full p-3 mr-4 ${iconBg} ${iconColor}`}>
@@ -439,7 +397,6 @@
           );
       };
 
-      // --- From screens/ClientsScreen.js ---
       const ClientFormModal = ({ client, onSave, onClose, onToggleStatus }) => {
           const [formData, setFormData] = useState({
               firstName: client?.firstName || '',
@@ -455,7 +412,11 @@
 
           const handleSubmit = (e) => {
               e.preventDefault();
-              onSave({ ...formData, id: client?.id || '', status: client?.status || ClientStatus.ACTIVE });
+              if (client) {
+                onSave({ ...client, ...formData });
+              } else {
+                onSave({ ...formData, status: ClientStatus.ACTIVE });
+              }
           };
           
           return (
@@ -767,7 +728,6 @@
           );
       };
 
-      // --- From screens/TemplatesScreen.js ---
       const TemplateFormModal = ({ template, onSave, onClose }) => {
           const [formData, setFormData] = useState({
               name: template?.name || '',
@@ -785,7 +745,11 @@
 
           const handleSubmit = (e) => {
               e.preventDefault();
-              onSave({ ...formData, id: template?.id || '', status: template?.status || PackTemplateStatus.ACTIVE });
+              if (template) {
+                onSave({ ...template, ...formData });
+              } else {
+                onSave({ ...formData, status: PackTemplateStatus.ACTIVE });
+              }
           };
           
           return (
@@ -895,7 +859,6 @@
           );
       };
 
-      // --- From screens/AttendanceScreen.js ---
       const AttendanceScreen = ({ data }) => {
           const { clients, purchasedPacks, packTemplates, attendanceRecords, recordAttendance, deleteAttendance } = data;
           const [classDate, setClassDate] = useState(new Date().toISOString().split('T')[0]);
@@ -1071,23 +1034,110 @@
           );
       };
 
-      // --- From App.js ---
-      const App = () => {
-        const data = useAppData();
+      // --- New Login Screen ---
+      const LoginScreen = () => {
+          const [email, setEmail] = useState('');
+          const [password, setPassword] = useState('');
+          const [isSignUp, setIsSignUp] = useState(false);
+          const [error, setError] = useState('');
+          const [loading, setLoading] = useState(false);
+
+          const handleAuthAction = async (e) => {
+              e.preventDefault();
+              setError('');
+              setLoading(true);
+              try {
+                  if (isSignUp) {
+                      await createUserWithEmailAndPassword(auth, email, password);
+                  } else {
+                      await signInWithEmailAndPassword(auth, email, password);
+                  }
+              } catch (err) {
+                  setError(err.message);
+              } finally {
+                setLoading(false);
+              }
+          };
+
+          const handleGoogleSignIn = async () => {
+              setError('');
+              setLoading(true);
+              try {
+                  const provider = new GoogleAuthProvider();
+                  await signInWithPopup(auth, provider);
+              } catch (err) {
+                  setError(err.message);
+              } finally {
+                setLoading(false);
+              }
+          };
+
+          return (
+              <div className="flex items-center justify-center min-h-screen">
+                  <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg border border-slate-200/80">
+                      <div>
+                          <h1 className="text-3xl font-bold text-center text-primary-dark">TicketTrack Pilates</h1>
+                          <p className="text-center text-slate-500 mt-2">{isSignUp ? 'Create an account to get started' : 'Sign in to your account'}</p>
+                      </div>
+                      <form className="space-y-4" onSubmit={handleAuthAction}>
+                          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email address" required className="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-accent focus:border-accent" />
+                          <input type="password" value={password} onChange={e => setPassword(e.taget.value)} placeholder="Password" required minLength="6" className="w-full px-4 py-2 border border-slate-300 rounded-md focus:ring-accent focus:border-accent" />
+                          <button type="submit" disabled={loading} className="w-full px-4 py-2 font-semibold text-white bg-primary-dark rounded-md hover:bg-primary disabled:bg-slate-400 flex items-center justify-center">
+                            {loading && <LoaderCircle className="animate-spin mr-2 h-5 w-5"/>}
+                            {isSignUp ? 'Sign Up' : 'Sign In'}
+                          </button>
+                      </form>
+                      {error && <p className="text-sm text-center text-red-600 bg-red-100 p-3 rounded-md">{error}</p>}
+                      <div className="relative flex items-center">
+                        <div className="flex-grow border-t border-slate-200"></div>
+                        <span className="flex-shrink mx-4 text-slate-400 text-sm">OR</span>
+                        <div className="flex-grow border-t border-slate-200"></div>
+                      </div>
+                      <button onClick={handleGoogleSignIn} disabled={loading} className="w-full flex items-center justify-center px-4 py-2 border border-slate-300 rounded-md hover:bg-slate-50 disabled:bg-slate-200">
+                          <svg className="w-5 h-5 mr-2" viewBox="0 0 48 48">
+                              <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
+                              <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z" />
+                              <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.222 0-9.519-3.483-11.083-8.194l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
+                              <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C44.471 36.053 48 30.637 48 24c0-1.341-.138-2.65-.389-3.917z" />
+                          </svg>
+                          Sign in with Google
+                      </button>
+                      <p className="text-center text-sm text-slate-600">
+                          {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+                          <button onClick={() => setIsSignUp(!isSignUp)} className="font-semibold text-accent hover:underline">
+                              {isSignUp ? 'Sign In' : 'Sign Up'}
+                          </button>
+                      </p>
+                  </div>
+              </div>
+          );
+      };
+
+      // --- Main Application Component ---
+      const MainApp = ({ user }) => {
+        const data = useFirestoreData(user.uid);
         const [currentPage, setCurrentPage] = useState(Page.DASHBOARD);
+        
+        const handleSignOut = () => {
+          if (confirm('Are you sure you want to sign out?')) {
+            signOut(auth);
+          }
+        };
 
         const renderPage = () => {
+          if (data.loading) {
+            return (
+              <div className="flex justify-center items-center h-64">
+                <LoaderCircle className="animate-spin h-10 w-10 text-accent"/>
+              </div>
+            );
+          }
           switch (currentPage) {
-            case Page.DASHBOARD:
-              return <DashboardScreen data={data} />;
-            case Page.CLIENTS:
-              return <ClientsScreen data={data} />;
-            case Page.TEMPLATES:
-              return <TemplatesScreen data={data} />;
-            case Page.ATTENDANCE:
-              return <AttendanceScreen data={data} />;
-            default:
-              return <DashboardScreen data={data} />;
+            case Page.DASHBOARD: return <DashboardScreen data={data} />;
+            case Page.CLIENTS: return <ClientsScreen data={data} />;
+            case Page.TEMPLATES: return <TemplatesScreen data={data} />;
+            case Page.ATTENDANCE: return <AttendanceScreen data={data} />;
+            default: return <DashboardScreen data={data} />;
           }
         };
 
@@ -1124,6 +1174,11 @@
                           </button>
                         </li>
                       ))}
+                      <li>
+                        <button onClick={handleSignOut} title="Sign Out" className="flex items-center px-3 py-2 rounded-full text-sm font-semibold text-slate-600 hover:bg-rose-100 hover:text-rose-700 transition-colors">
+                            <LogOut className="h-5 w-5" />
+                        </button>
+                      </li>
                     </ul>
                   </nav>
                 </div>
@@ -1135,6 +1190,35 @@
           </div>
         );
       };
+
+      // --- Root Application Component with Auth Logic ---
+      const App = () => {
+        const [user, setUser] = useState(null);
+        const [loading, setLoading] = useState(true);
+
+        useEffect(() => {
+          const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            setLoading(false);
+          });
+          // Cleanup subscription on unmount
+          return () => unsubscribe();
+        }, []);
+
+        if (loading) {
+          return (
+            <div className="flex items-center justify-center min-h-screen">
+              <LoaderCircle className="animate-spin h-12 w-12 text-accent" />
+            </div>
+          );
+        }
+
+        if (!user) {
+          return <LoginScreen />;
+        }
+
+        return <MainApp user={user} />;
+      }
 
 
       // --- Final Render Logic ---
