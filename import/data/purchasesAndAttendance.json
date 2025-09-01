@@ -1,0 +1,111 @@
+
+[
+  {
+    "clientEmail": "yuriko.suzuki@example.com",
+    "purchase": {
+      "templateName": "プライベート3回",
+      "purchaseDate": "2024-04-01"
+    },
+    "attendance": [
+      "2024-04-01",
+      "2024-04-08",
+      "2024-04-15"
+    ]
+  },
+  {
+    "clientEmail": "akiko.tanaka@example.com",
+    "purchase": {
+      "templateName": "グループ4回",
+      "purchaseDate": "2024-04-02"
+    },
+    "attendance": [
+      "2024-04-02",
+      "2024-04-09",
+      "2024-04-16"
+    ]
+  },
+  {
+    "clientEmail": "emi.sato@example.com",
+    "purchase": {
+      "templateName": "グループ8回",
+      "purchaseDate": "2024-04-03"
+    },
+    "attendance": [
+      "2024-04-03",
+      "2024-04-10",
+      "2024-04-17",
+      "2024-04-24"
+    ]
+  },
+  {
+    "clientEmail": "hanako.ito@example.com",
+    "purchase": {
+      "templateName": "プライベート1回",
+      "purchaseDate": "2024-04-04"
+    },
+    "attendance": [
+      "2024-04-04"
+    ]
+  },
+  {
+    "clientEmail": "sachiko.watanabe@example.com",
+    "purchase": {
+      "templateName": "グループ4回",
+      "purchaseDate": "2024-04-05"
+    },
+    "attendance": [
+      "2024-04-05",
+      "2024-04-12"
+    ]
+  },
+  {
+    "clientEmail": "kumiko.yamamoto@example.com",
+    "purchase": {
+      "templateName": "グループ8回",
+      "purchaseDate": "2024-05-01"
+    },
+    "attendance": [
+      "2024-05-01",
+      "2024-05-08"
+    ]
+  },
+  {
+    "clientEmail": "chiyo.nakamura@example.com",
+    "purchase": {
+      "templateName": "プライベート3回",
+      "purchaseDate": "2024-05-02"
+    },
+    "attendance": [
+      "2024-05-02"
+    ]
+  },
+  {
+    "clientEmail": "asami.kobayashi@example.com",
+    "purchase": {
+      "templateName": "グループ4回",
+      "purchaseDate": "2024-05-03"
+    },
+    "attendance": [
+      "2024-05-03"
+    ]
+  },
+  {
+    "clientEmail": "miki.kato@example.com",
+    "purchase": {
+      "templateName": "プライベート1回",
+      "purchaseDate": "2024-05-06"
+    },
+    "attendance": []
+  },
+  {
+    "clientEmail": "rina.yoshida@example.com",
+    "purchase": {
+      "templateName": "グループ8回",
+      "purchaseDate": "2024-05-07"
+    },
+    "attendance": [
+      "2024-05-07",
+      "2024-05-14"
+    ]
+  }
+]

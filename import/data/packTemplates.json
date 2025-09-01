@@ -1,0 +1,43 @@
+
+[
+  {
+    "name": "プライベート1回",
+    "ticketCount": 1,
+    "ticketType": "private",
+    "price": 10000,
+    "expiryMonths": 1,
+    "status": "active"
+  },
+  {
+    "name": "プライベート3回",
+    "ticketCount": 3,
+    "ticketType": "private",
+    "price": 27000,
+    "expiryMonths": 3,
+    "status": "active"
+  },
+  {
+    "name": "グループ1回",
+    "ticketCount": 1,
+    "ticketType": "group",
+    "price": 3000,
+    "expiryMonths": 1,
+    "status": "active"
+  },
+  {
+    "name": "グループ4回",
+    "ticketCount": 4,
+    "ticketType": "group",
+    "price": 10000,
+    "expiryMonths": 1,
+    "status": "active"
+  },
+  {
+    "name": "グループ8回",
+    "ticketCount": 8,
+    "ticketType": "group",
+    "price": 18000,
+    "expiryMonths": 2,
+    "status": "active"
+  }
+]

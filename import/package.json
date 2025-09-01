@@ -1,0 +1,14 @@
+{
+  "name": "lesson-navi-importer",
+  "version": "1.0.0",
+  "description": "A one-time script to import data into Firestore for the Lesson Navi app.",
+  "main": "import.js",
+  "scripts": {
+    "start": "node import.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "firebase-admin": "^12.2.0"
+  }
+}

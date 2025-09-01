@@ -1,0 +1,73 @@
+
+[
+  {
+    "firstName": "Yuriko",
+    "lastName": "Suzuki",
+    "email": "yuriko.suzuki@example.com",
+    "phone": "090-1111-1111",
+    "status": "active"
+  },
+  {
+    "firstName": "Akiko",
+    "lastName": "Tanaka",
+    "email": "akiko.tanaka@example.com",
+    "phone": "090-2222-2222",
+    "status": "active"
+  },
+  {
+    "firstName": "Emi",
+    "lastName": "Sato",
+    "email": "emi.sato@example.com",
+    "phone": "090-3333-3333",
+    "status": "active"
+  },
+  {
+    "firstName": "Hanako",
+    "lastName": "Ito",
+    "email": "hanako.ito@example.com",
+    "phone": "090-4444-4444",
+    "status": "active"
+  },
+  {
+    "firstName": "Sachiko",
+    "lastName": "Watanabe",
+    "email": "sachiko.watanabe@example.com",
+    "phone": "090-5555-5555",
+    "status": "active"
+  },
+  {
+    "firstName": "Kumiko",
+    "lastName": "Yamamoto",
+    "email": "kumiko.yamamoto@example.com",
+    "phone": "090-6666-6666",
+    "status": "active"
+  },
+  {
+    "firstName": "Chiyo",
+    "lastName": "Nakamura",
+    "email": "chiyo.nakamura@example.com",
+    "phone": "090-7777-7777",
+    "status": "active"
+  },
+  {
+    "firstName": "Asami",
+    "lastName": "Kobayashi",
+    "email": "asami.kobayashi@example.com",
+    "phone": "090-8888-8888",
+    "status": "active"
+  },
+  {
+    "firstName": "Miki",
+    "lastName": "Kato",
+    "email": "miki.kato@example.com",
+    "phone": "090-9999-9999",
+    "status": "active"
+  },
+  {
+    "firstName": "Rina",
+    "lastName": "Yoshida",
+    "email": "rina.yoshida@example.com",
+    "phone": "090-0000-0000",
+    "status": "active"
+  }
+]
