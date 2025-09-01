@@ -421,9 +421,12 @@
               updateDoc(doc(db, 'users', userId, 'packTemplates', id), data);
           };
           
-          const recordPurchase = (clientId, templateId, purchaseDate) => {
+          const recordPurchase = async (clientId, templateId, purchaseDate) => {
               const template = packTemplates.find(t => t.id === templateId);
-              if (!template) return;
+              if (!template) {
+                  alert('Error: Selected pack template could not be found.');
+                  throw new Error('Template not found');
+              }
 
               const expiryDate = new Date(purchaseDate);
               expiryDate.setMonth(expiryDate.getMonth() + template.expiryMonths);
@@ -442,7 +445,14 @@
                       { date: Timestamp.fromDate(purchaseDate), type: PackHistoryType.PURCHASE, details }
                   ]
               };
-              addDoc(collection(db, 'users', userId, 'purchasedPacks'), newPack);
+
+              try {
+                  await addDoc(collection(db, 'users', userId, 'purchasedPacks'), newPack);
+              } catch (error) {
+                  console.error("Error recording purchase in Firestore: ", error);
+                  alert(`Failed to record purchase. Please check your connection and try again. Error: ${error.message}`);
+                  throw error;
+              }
           };
 
           const updatePurchasedPackExpiry = (packId, newExpiryDate) => {
@@ -733,11 +743,23 @@
           const { t } = useLanguage();
           const [templateId, setTemplateId] = useState('');
           const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().split('T')[0]);
+          const [isSaving, setIsSaving] = useState(false);
 
-          const handleSubmit = (e) => {
+          const handleSubmit = async (e) => {
               e.preventDefault();
-              if (templateId && purchaseDate) {
-                  onSave(client.id, templateId, new Date(purchaseDate));
+              if (!templateId || !purchaseDate) {
+                  alert('Please select a ticket pack and a purchase date.');
+                  return;
+              }
+              setIsSaving(true);
+              try {
+                  await onSave(client.id, templateId, new Date(purchaseDate));
+                  // Success! The parent's `onSave` handler will close the modal.
+              } catch (error) {
+                  console.error("Failed to save purchase from modal:", error);
+                  // Error is alerted to the user in the data hook, so we just need to re-enable the form here.
+              } finally {
+                  setIsSaving(false);
               }
           };
 
@@ -772,8 +794,10 @@
                                   className="mt-1 block w-full border-slate-300 rounded-md shadow-sm focus:ring-accent focus:border-accent"/>
                           </div>
                           <div className="flex justify-end space-x-4 pt-6">
-                              <button type="button" onClick={onClose} className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 font-semibold">{t('cancel')}</button>
-                              <button type="submit" className="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark font-semibold">{t('save')}</button>
+                              <button type="button" onClick={onClose} disabled={isSaving} className="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 font-semibold disabled:opacity-50">{t('cancel')}</button>
+                              <button type="submit" disabled={isSaving} className="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark font-semibold flex items-center justify-center w-24 disabled:bg-slate-400">
+                                  {isSaving ? <LoaderCircle className="animate-spin h-5 w-5" /> : t('save')}
+                              </button>
                           </div>
                       </form>
                   </div>
@@ -874,8 +898,8 @@
               updateClient({ ...client, status: newStatus });
           };
           
-          const handleRecordPurchase = (clientId, templateId, purchaseDate) => {
-              recordPurchase(clientId, templateId, purchaseDate);
+          const handleRecordPurchase = async (clientId, templateId, purchaseDate) => {
+              await recordPurchase(clientId, templateId, purchaseDate);
               setIsPurchaseModalOpen(false);
           };
           
