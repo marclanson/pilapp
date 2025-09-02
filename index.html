@@ -917,125 +917,140 @@
               return { text: t('status_active'), color: 'bg-emerald-100 text-emerald-800' };
           };
           
-          if (selectedClient) {
-              const clientPacks = purchasedPacks.filter(p => p.clientId === selectedClient.id);
-              return (
-                  <div>
-                      <button onClick={() => setSelectedClient(null)} className="flex items-center text-sm font-semibold text-slate-600 hover:text-primary-dark mb-6">
-                          {t('backToClientList')}
-                      </button>
-                      <div className="flex justify-between items-center mb-6">
-                          <div>
-                              <h2 className="text-3xl font-bold text-primary-dark">{selectedClient.firstName} {selectedClient.lastName}</h2>
-                              <p className="text-slate-500">{selectedClient.email} &bull; {selectedClient.phone}</p>
-                          </div>
-                          <div className="space-x-2">
-                            <button onClick={() => { setClientToEdit(selectedClient); setIsClientFormOpen(true); }} className="p-2 bg-slate-200 text-slate-700 rounded-full hover:bg-slate-300"><Edit size={18}/></button>
-                            <button onClick={() => setIsPurchaseModalOpen(true)} className="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark font-semibold">{t('recordPurchase')}</button>
-                          </div>
-                      </div>
+          const clientDetailView = selectedClient && (
+            <div>
+              <button onClick={() => setSelectedClient(null)} className="flex items-center text-sm font-semibold text-slate-600 hover:text-primary-dark mb-6">
+                {t('backToClientList')}
+              </button>
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-3xl font-bold text-primary-dark">{selectedClient.firstName} {selectedClient.lastName}</h2>
+                  <p className="text-slate-500">{selectedClient.email} &bull; {selectedClient.phone}</p>
+                </div>
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <button 
+                    onClick={() => { setClientToEdit(selectedClient); setIsClientFormOpen(true); }} 
+                    className="flex items-center px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300 font-semibold"
+                    aria-label={t('editClient')}
+                  >
+                    <Edit size={16} className="mr-2" />
+                    {t('editClient')}
+                  </button>
+                  <button 
+                    onClick={() => setIsPurchaseModalOpen(true)} 
+                    className="flex items-center px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark font-semibold"
+                  >
+                    <PlusCircle size={16} className="mr-2" />
+                    {t('recordPurchase')}
+                  </button>
+                </div>
+              </div>
 
-                      <h3 className="text-xl font-semibold text-primary-dark mt-8 mb-4">{t('purchasedPacks')}</h3>
-                      <div className="space-y-4">
-                          {clientPacks.length > 0 ? clientPacks.map(p => {
-                              const template = packTemplates.find(t => t.id === p.templateId);
-                              if (!template) return null;
-                              const status = getPackStatus(p);
-                              return (
-                                  <div key={p.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-200/80">
-                                      <div className="flex justify-between items-start">
-                                          <div>
-                                              <p className="font-bold text-primary-dark">{template.name}</p>
-                                              <p className="text-sm text-slate-500">{t('purchaseDate')}: {formatDate(p.purchaseDate)}</p>
-                                          </div>
-                                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${status.color}`}>{status.text}</span>
-                                      </div>
-                                      <div className="flex justify-between items-end mt-4">
-                                        <div>
-                                            <p className="text-2xl font-bold text-accent">{p.ticketsRemaining}</p>
-                                            <p className="text-sm text-slate-500">{t('ticketsRemaining')}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-sm text-slate-500">{t('expires')}: {formatDate(p.expiryDate)}</p>
-                                            <div className="space-x-2 mt-1">
-                                              <button onClick={() => { setPackForModal(p); setIsHistoryModalOpen(true); }} className="px-3 py-1 text-xs font-semibold text-slate-600 bg-slate-200 rounded-md hover:bg-slate-300">{t('viewHistory')}</button>
-                                              <button onClick={() => { setPackForModal(p); setIsExpiryModalOpen(true); }} className="px-3 py-1 text-xs font-semibold text-slate-600 bg-slate-200 rounded-md hover:bg-slate-300">{t('pauseEditExpiry')}</button>
-                                            </div>
-                                        </div>
-                                      </div>
+              <h3 className="text-xl font-semibold text-primary-dark mt-8 mb-4">{t('purchasedPacks')}</h3>
+              <div className="space-y-4">
+                {purchasedPacks.filter(p => p.clientId === selectedClient.id).length > 0 ? purchasedPacks.filter(p => p.clientId === selectedClient.id).map(p => {
+                    const template = packTemplates.find(t => t.id === p.templateId);
+                    if (!template) return null;
+                    const status = getPackStatus(p);
+                    return (
+                        <div key={p.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-200/80">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <p className="font-bold text-primary-dark">{template.name}</p>
+                                    <p className="text-sm text-slate-500">{t('purchaseDate')}: {formatDate(p.purchaseDate)}</p>
+                                </div>
+                                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${status.color}`}>{status.text}</span>
+                            </div>
+                            <div className="flex justify-between items-end mt-4">
+                              <div>
+                                  <p className="text-2xl font-bold text-accent">{p.ticketsRemaining}</p>
+                                  <p className="text-sm text-slate-500">{t('ticketsRemaining')}</p>
+                              </div>
+                              <div className="text-right">
+                                  <p className="text-sm text-slate-500">{t('expires')}: {formatDate(p.expiryDate)}</p>
+                                  <div className="space-x-2 mt-1">
+                                    <button onClick={() => { setPackForModal(p); setIsHistoryModalOpen(true); }} className="px-3 py-1 text-xs font-semibold text-slate-600 bg-slate-200 rounded-md hover:bg-slate-300">{t('viewHistory')}</button>
+                                    <button onClick={() => { setPackForModal(p); setIsExpiryModalOpen(true); }} className="px-3 py-1 text-xs font-semibold text-slate-600 bg-slate-200 rounded-md hover:bg-slate-300">{t('pauseEditExpiry')}</button>
                                   </div>
-                              );
-                          }) : <p className="text-slate-500">{t('noPacksPurchased')}</p>}
-                      </div>
-                      
-                  </div>
-              )
-          }
+                              </div>
+                            </div>
+                        </div>
+                    );
+                }) : <p className="text-slate-500">{t('noPacksPurchased')}</p>}
+              </div>
+            </div>
+          );
+
+          const clientListView = (
+            <div>
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-3xl font-bold text-primary-dark">{t('clients')}</h2>
+                <button onClick={() => { setClientToEdit(null); setIsClientFormOpen(true); }} className="flex items-center px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark font-semibold">
+                    <PlusCircle size={18} className="mr-2" /> {t('addClient')}
+                </button>
+              </div>
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-sm text-slate-500">
+                      <tr>
+                          <th className="p-4">Name</th>
+                          <th className="p-4">Contact</th>
+                          <th className="p-4">Status</th>
+                      </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                      {clients.map(client => (
+                          <tr key={client.id} onClick={() => setSelectedClient(client)} className="hover:bg-slate-50 cursor-pointer">
+                              <td className="p-4 font-semibold text-primary-dark">{client.firstName} {client.lastName}</td>
+                              <td className="p-4 text-slate-600">{client.email}</td>
+                              <td className="p-4">
+                                  <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${client.status === ClientStatus.ACTIVE ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-800'}`}>
+                                      {t(client.status)}
+                                  </span>
+                              </td>
+                          </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
 
           return (
-              <div>
-                  <div className="flex justify-between items-center mb-8">
-                      <h2 className="text-3xl font-bold text-primary-dark">{t('clients')}</h2>
-                      <button onClick={() => { setClientToEdit(null); setIsClientFormOpen(true); }} className="flex items-center px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark font-semibold">
-                          <PlusCircle size={18} className="mr-2" /> {t('addClient')}
-                      </button>
-                  </div>
-                  <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
-                      <table className="w-full text-left">
-                          <thead className="bg-slate-50 border-b border-slate-200 text-sm text-slate-500">
-                              <tr>
-                                  <th className="p-4">Name</th>
-                                  <th className="p-4">Contact</th>
-                                  <th className="p-4">Status</th>
-                              </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-200">
-                              {clients.map(client => (
-                                  <tr key={client.id} onClick={() => setSelectedClient(client)} className="hover:bg-slate-50 cursor-pointer">
-                                      <td className="p-4 font-semibold text-primary-dark">{client.firstName} {client.lastName}</td>
-                                      <td className="p-4 text-slate-600">{client.email}</td>
-                                      <td className="p-4">
-                                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${client.status === ClientStatus.ACTIVE ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-800'}`}>
-                                              {t(client.status)}
-                                          </span>
-                                      </td>
-                                  </tr>
-                              ))}
-                          </tbody>
-                      </table>
-                  </div>
+            <div>
+              {selectedClient ? clientDetailView : clientListView}
 
-                  {isClientFormOpen && (
-                      <ClientFormModal 
-                          client={clientToEdit}
-                          onSave={clientToEdit ? handleUpdateClient : handleAddClient}
-                          onClose={() => setIsClientFormOpen(false)}
-                          onToggleStatus={handleToggleClientStatus}
-                      />
-                  )}
-                  {isPurchaseModalOpen && (
-                      <PurchaseModal 
-                          client={selectedClient} 
-                          templates={packTemplates} 
-                          onSave={recordPurchase} 
-                          onClose={() => setIsPurchaseModalOpen(false)}
-                      />
-                  )}
-                  {isHistoryModalOpen && (
-                      <HistoryModal
-                          pack={packForModal}
-                          template={packTemplates.find(t => t.id === packForModal.templateId)}
-                          onClose={() => setIsHistoryModalOpen(false)}
-                      />
-                  )}
-                  {isExpiryModalOpen && (
-                    <ExpiryModal
-                        pack={packForModal}
-                        onSave={handleUpdateExpiry}
-                        onClose={() => setIsExpiryModalOpen(false)}
-                    />
-                  )}
-              </div>
+              {isClientFormOpen && (
+                <ClientFormModal 
+                  client={clientToEdit}
+                  onSave={clientToEdit ? handleUpdateClient : handleAddClient}
+                  onClose={() => setIsClientFormOpen(false)}
+                  onToggleStatus={handleToggleClientStatus}
+                />
+              )}
+              {isPurchaseModalOpen && selectedClient && (
+                <PurchaseModal 
+                  client={selectedClient} 
+                  templates={packTemplates} 
+                  onSave={recordPurchase} 
+                  onClose={() => setIsPurchaseModalOpen(false)}
+                />
+              )}
+              {isHistoryModalOpen && packForModal && (
+                <HistoryModal
+                  pack={packForModal}
+                  template={packTemplates.find(t => t.id === packForModal.templateId)}
+                  onClose={() => setIsHistoryModalOpen(false)}
+                />
+              )}
+              {isExpiryModalOpen && packForModal && (
+                <ExpiryModal
+                  pack={packForModal}
+                  onSave={handleUpdateExpiry}
+                  onClose={() => setIsExpiryModalOpen(false)}
+                />
+              )}
+            </div>
           );
       };
 
