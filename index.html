@@ -41,7 +41,7 @@
         Calendar, Users, ClipboardList, LayoutDashboard, 
         DollarSign, Ticket, Clock, AlertTriangle,
         PlusCircle, Edit, History, LogOut,
-        Trash2, X, LoaderCircle, Languages
+        Trash2, X, LoaderCircle, Languages, Clipboard
       } from 'https://esm.sh/lucide-react@0.408.0?external=react';
       
       // --- Firebase SDKs ---
@@ -153,6 +153,14 @@
             ticketPack: 'Ticket Pack',
             selectAPack: 'Select a pack',
             purchaseDate: 'Purchase Date',
+            copyHistory: 'Copy for Chat',
+            copied: 'Copied!',
+            packHistorySummaryTitle: "Pack Summary for {packName}",
+            packHistorySummaryPurchase: "Purchased on: {date} for {price}",
+            packHistorySummaryExpiry: "Expires on: {date}",
+            packHistorySummaryTickets: "Tickets: {remaining}/{initial}",
+            packHistorySummaryAttendanceHeader: "Attendance:",
+            packHistorySummaryNoAttendance: "No classes attended yet.",
             // Templates
             addTemplate: 'Add Pack',
             templateDetails: '{count} {type} tickets for {price} (Expires in {months} months)',
@@ -245,6 +253,14 @@
             ticketPack: 'チケットパック',
             selectAPack: 'パックを選択',
             purchaseDate: '購入日',
+            copyHistory: 'チャット用にコピー',
+            copied: 'コピーしました！',
+            packHistorySummaryTitle: "{packName}のパック概要",
+            packHistorySummaryPurchase: "購入日: {date} ({price})",
+            packHistorySummaryExpiry: "有効期限: {date}",
+            packHistorySummaryTickets: "チケット: {remaining}/{initial} 枚",
+            packHistorySummaryAttendanceHeader: "出席履歴:",
+            packHistorySummaryNoAttendance: "まだ出席したクラスはありません。",
             // Templates
             addTemplate: 'パックを追加',
             templateDetails: '{count}枚の{type}チケット、{price}（{months}ヶ月間有効）',
@@ -299,7 +315,7 @@
 
         const formatCurrency = (amount) => {
           const locale = language === 'ja' ? 'ja-JP' : 'en-US';
-          const currency = 'USD'; // Always use USD for the $ symbol
+          const currency = language === 'ja' ? 'JPY' : 'USD';
           return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
         };
 
@@ -332,7 +348,7 @@
                     <option value="ja">日本語</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="http://www.w3.org/2000/svg"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                 </div>
             </div>
         );
@@ -814,26 +830,89 @@
       };
 
       const HistoryModal = ({ pack, template, onClose }) => {
-          const { t, formatDate } = useLanguage();
+          const { t, formatDate, formatCurrency } = useLanguage();
+          const [isCopied, setIsCopied] = useState(false);
+          
+          if (!pack || !template) return null;
+
+          const purchaseEvent = pack.history.find(h => h.type === PackHistoryType.PURCHASE);
+          const otherEvents = pack.history
+              .filter(h => h.type !== PackHistoryType.PURCHASE)
+              .sort((a,b) => new Date(b.date) - new Date(a.date)); // Most recent first
+          
+          const handleCopy = async () => {
+              const attendanceEvents = pack.history.filter(h => h.type === PackHistoryType.ATTENDANCE);
+              const attendanceDates = attendanceEvents.length > 0
+                  ? attendanceEvents.map(e => `- ${formatDate(e.date)}`).join('\n')
+                  : t('packHistorySummaryNoAttendance');
+              
+              const textToCopy = [
+                  t('packHistorySummaryTitle', { packName: template.name }),
+                  '',
+                  t('packHistorySummaryPurchase', { date: formatDate(pack.purchaseDate), price: formatCurrency(pack.purchasePrice) }),
+                  t('packHistorySummaryExpiry', { date: formatDate(pack.expiryDate) }),
+                  t('packHistorySummaryTickets', { remaining: pack.ticketsRemaining, initial: pack.initialTickets }),
+                  '',
+                  t('packHistorySummaryAttendanceHeader'),
+                  attendanceDates
+              ].join('\n');
+              
+              try {
+                  await navigator.clipboard.writeText(textToCopy);
+                  setIsCopied(true);
+                  setTimeout(() => setIsCopied(false), 2000);
+              } catch (err) {
+                  console.error('Failed to copy text: ', err);
+              }
+          };
+
+          const HistoryItem = ({ item }) => (
+            <div className="flex items-start space-x-4 pb-4 border-b border-slate-200 last:border-b-0">
+              <div className={`mt-1 rounded-full p-2 ${item.type === PackHistoryType.PURCHASE ? 'bg-emerald-100 text-emerald-600' : item.type === PackHistoryType.EXPIRY_CHANGE ? 'bg-amber-100 text-amber-600' : 'bg-sky-100 text-sky-600'}`}>
+                {item.type === PackHistoryType.PURCHASE && <DollarSign size={16}/>}
+                {item.type === PackHistoryType.ATTENDANCE && <Ticket size={16}/>}
+                {item.type === PackHistoryType.EXPIRY_CHANGE && <Clock size={16}/>}
+              </div>
+              <div>
+                 <p className="font-semibold text-primary-dark">{item.details}</p>
+                 <p className="text-sm text-slate-500">{formatDate(item.date)}</p>
+              </div>
+            </div>
+          );
+
           return (
             <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                  <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-lg">
-                      <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-primary-dark">{template?.name} - {t('viewHistory')}</h2>
+                  <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-lg flex flex-col">
+                      <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-bold text-primary-dark">{template.name} - {t('viewHistory')}</h2>
                         <button onClick={onClose} className="text-slate-500 hover:text-slate-800"><X size={24}/></button>
                       </div>
-                      <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-                        {[...pack.history].sort((a,b) => new Date(b.date) - new Date(a.date)).map((item, index) => (
-                          <div key={index} className="flex items-start space-x-4 pb-4 border-b border-slate-200 last:border-b-0">
-                            <div className={`mt-1 rounded-full p-2 ${item.type === PackHistoryType.PURCHASE ? 'bg-emerald-100 text-emerald-600' : 'bg-sky-100 text-sky-600'}`}>
-                              {item.type === PackHistoryType.PURCHASE ? <DollarSign size={16}/> : <Ticket size={16}/>}
-                            </div>
-                            <div>
-                               <p className="font-semibold text-primary-dark">{item.details}</p>
-                               <p className="text-sm text-slate-500">{formatDate(item.date)}</p>
-                            </div>
-                          </div>
-                        ))}
+                      
+                      <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                          <p className="text-sm text-slate-500 font-medium">{t('expires')}</p>
+                          <p className="text-lg font-semibold text-primary-dark">{formatDate(pack.expiryDate)}</p>
+                      </div>
+
+                      <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                          {purchaseEvent && <HistoryItem item={purchaseEvent} />}
+                          
+                          {otherEvents.map((item, index) => (
+                            <HistoryItem key={index} item={item} />
+                          ))}
+                      </div>
+
+                      <div className="mt-auto pt-6 border-t border-slate-200 text-right">
+                          <button 
+                            onClick={handleCopy}
+                            className="inline-flex items-center justify-center px-4 py-2 bg-accent text-white rounded-md hover:bg-accent-dark font-semibold transition-all duration-200 ease-in-out w-40"
+                          >
+                            {isCopied ? t('copied') : (
+                                <>
+                                    <Clipboard size={16} className="mr-2" />
+                                    {t('copyHistory')}
+                                </>
+                            )}
+                          </button>
                       </div>
                   </div>
               </div>
@@ -847,6 +926,7 @@
         const handleSubmit = (e) => {
             e.preventDefault();
             onSave(pack.id, new Date(expiryDate));
+            onClose();
         };
 
         return (
